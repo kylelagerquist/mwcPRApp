@@ -1,0 +1,262 @@
+{% extends "layout.html" %}
+{% block content %}
+<form action = "/" method = "POST">
+   <br><br>
+   <table border = 1 bgcolor="DarkGray">
+      {% for key, value in result.items() %}
+
+      <tr>
+         <th name="{{ key }}" value="{{ value }}"> {{ key }} </th>
+         <td> {{ value }} </td>
+      </tr>
+
+      {% endfor %}
+   </table><br><br>
+      {% for key, value in result.items() %}
+      <input type="hidden" name="{{ key }}" value="{{ value }}">
+      {% endfor %}
+<h2>Drinks</h2>
+   <table border = 1 bgcolor="DarkGray">
+      
+      <tr>
+         <th scope="col"> Component </th>
+         <th scope="col"> Planned </th>
+         <th scope="col"> Prepared </th>
+         <th scope="col"> Served </th>
+         <th scope="col"> Leftover </th>
+         <th scope="col"> Wasted </th>
+         <th scope="col"> Extra Needed </th>
+         <th scope="col"> Notes </th>
+      </tr>
+      {% for key,value in drinks.items() %}
+
+      <tr>
+         <th scope="row"> {{ key }} </th>
+         <td>{{ value }}</td>
+         <td><input style="width:75px" type="number" id="prepared-{{ key }}" name="prepared-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="served-{{ key }}" name="served-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="leftover-{{ key }}" name="leftover-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td id="wasted-{{ key }}" ></td>
+         <td><input style="width:75px" type="number" id="extra-{{ key }}" name="number-{{ key }}" required></td>
+         <td><input type="text" id="notes-{{ key }}" name="notes-{{ key }}" placeholder="Any notes?"></td>
+      </tr>
+
+      {% endfor %}
+   </table><br><br>
+
+   <script type="text/javascript">
+      function autocalculate(comp){
+         var prep = document.getElementById("prepared-"+comp).value;
+         var served = document.getElementById("served-"+comp).value;
+         var leftover = document.getElementById("leftover-"+comp).value;
+         document.getElementById("wasted-"+comp).innerHTML = prep - served - leftover;
+      }
+   </script>
+
+<h2>Main Menu - {{ menuDay }}</h2>
+   <table border = 1 bgcolor="DarkGray">
+      <tr>
+         <th> Component </th>
+         <th> Planned </th>
+         <th> Prepared </th>
+         <th> Served </th>
+         <th> Leftover </th>
+         <th> Wasted </th>
+         <th> Extra Needed </th>
+         <th> Notes </th>
+      </tr>
+      {% for key,value in components.items() %}
+
+      <tr>
+         <th scope="row"> {{ key }} </th>
+         <td>{{ value }}</td>
+         <td><input style="width:75px" type="number" id="prepared-{{ key }}" name="prepared-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="served-{{ key }}" name="served-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="leftover-{{ key }}" name="leftover-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td id="wasted-{{ key }}" ></td>
+         <td><input style="width:75px" type="number" id="extra-{{ key }}" name="number-{{ key }}" required></td>
+         <td><input type="text" id="notes-{{ key }}" name="notes-{{ key }}" placeholder="Any notes?"></td>
+      </tr>
+
+      {% endfor %}
+
+   </table><br><br>
+
+   <h2>Fruits</h2>
+   <table border = 1 bgcolor="DarkGray">
+      <tr>
+         <th> Component </th>
+         <th> Planned </th>
+         <th> Prepared </th>
+         <th> Served </th>
+         <th> Leftover </th>
+         <th> Wasted </th>
+         <th> Extra Needed </th>
+         <th> Notes </th>
+      </tr>
+      {% for key,value in fruits.items() %}
+
+      <tr>
+         <th scope="row"> {{ key }} </th>
+         <td>{{ value }}</td>
+         <td><input style="width:75px" type="number" id="prepared-{{ key }}" name="prepared-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="served-{{ key }}" name="served-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="leftover-{{ key }}" name="leftover-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td id="wasted-{{ key }}" ></td>
+         <td><input style="width:75px" type="number" id="extra-{{ key }}" name="number-{{ key }}" required></td>
+         <td><input type="text" id="notes-{{ key }}" name="notes-{{ key }}" placeholder="Any notes?"></td>
+      </tr>
+
+      {% endfor %}
+
+   </table><br><br>
+
+   {% if isLunch %}
+   <h2>Salad Bar</h2>
+   <table border = 1 bgcolor="DarkGray">
+      <tr>
+         <th colspan="8"> Salad Bar</th>
+      </tr>
+      <tr>
+         <th> Component </th>
+         <th> Planned </th>
+         <th> Prepared </th>
+         <th> Served </th>
+         <th> Leftover </th>
+         <th> Wasted </th>
+         <th> Extra Needed </th>
+         <th> Notes </th>
+      </tr>
+      {% for key,value in saladComponents.items() %}
+
+      <tr>
+         <th scope="row"> {{ key }} </th>
+         <td>{{ value }}</td>
+         <td><input style="width:75px" type="number" id="prepared-{{ key }}" name="prepared-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="served-{{ key }}" name="served-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="leftover-{{ key }}" name="leftover-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td id="wasted-{{ key }}" ></td>
+         <td><input style="width:75px" type="number" id="extra-{{ key }}" name="number-{{ key }}" required></td>
+         <td><input type="text" id="notes-{{ key }}" name="notes-{{ key }}" placeholder="Any notes?"></td>
+      </tr>
+
+      {% endfor %}
+   </table><br><br>
+   {% endif %}
+
+   {% if isLunch and isExpanded %}
+   <h2>Salad Bar Add-On</h2>
+   <table border = 1 bgcolor="DarkGray">
+      <tr>
+         <th> Component </th>
+         <th> Planned </th>
+         <th> Prepared </th>
+         <th> Served </th>
+         <th> Leftover </th>
+         <th> Wasted </th>
+         <th> Extra Needed </th>
+         <th> Notes </th>
+      </tr>
+      {% for key,value in expandedComponents.items() %}
+
+      <tr>
+         <th scope="row"> {{ key }} </th>
+         <td>{{ value }}</td>
+         <td><input style="width:75px" type="number" id="prepared-{{ key }}" name="prepared-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="served-{{ key }}" name="served-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="leftover-{{ key }}" name="leftover-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td id="wasted-{{ key }}" ></td>
+         <td><input style="width:75px" type="number" id="extra-{{ key }}" name="number-{{ key }}" required></td>
+         <td><input type="text" id="notes-{{ key }}" name="notes-{{ key }}" placeholder="Any notes?"></td>
+      </tr>
+
+      {% endfor %}
+   </table><br><br>
+   {% endif %}
+
+   {% if isGrab %}
+   {% if isLunch %}
+   <h2>Grab N Go</h2>
+   <table border = 1 bgcolor="DarkGray">
+      <tr>
+         <th> Component </th>
+         <th> Planned </th>
+         <th> Prepared </th>
+         <th> Served </th>
+         <th> Leftover </th>
+         <th> Wasted </th>
+         <th> Extra Needed </th>
+         <th> Notes </th>
+      </tr>
+      {% for key,value in grabAndGoLunchComponents.items() %}
+
+      <tr>
+         <th scope="row"> {{ key }} </th>
+         <td>{{ value }}</td>
+         <td><input style="width:75px" type="number" id="prepared-{{ key }}" name="prepared-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="served-{{ key }}" name="served-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="leftover-{{ key }}" name="leftover-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td id="wasted-{{ key }}" ></td>
+         <td><input style="width:75px" type="number" id="extra-{{ key }}" name="number-{{ key }}" required></td>
+         <td><input type="text" id="notes-{{ key }}" name="notes-{{ key }}" placeholder="Any notes?"></td>
+      </tr>
+
+      {% endfor %}
+   </table><br><br>
+   
+
+   {% else %}
+   <h2>Grab N Go</h2>
+   <table border = 1 bgcolor="DarkGray">
+      <tr>
+         <th> Component </th>
+         <th> Planned </th>
+         <th> Prepared </th>
+         <th> Served </th>
+         <th> Leftover </th>
+         <th> Wasted </th>
+         <th> Extra Needed </th>
+         <th> Notes </th>
+      </tr>
+      {% for key,value in grabAndGoBreakComponents.items() %}
+
+      <tr>
+         <th scope="row"> {{ key }} </th>
+         <td>{{ value }}</td>
+         <td><input style="width:75px" type="number" id="prepared-{{ key }}" name="prepared-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="served-{{ key }}" name="served-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td><input style="width:75px" type="number" id="leftover-{{ key }}" name="leftover-{{ key }}" onchange="autocalculate('{{ key }}')" required></td>
+         <td id="wasted-{{ key }}" ></td>
+         <td><input style="width:75px" type="number" id="extra-{{ key }}" name="number-{{ key }}" required></td>
+         <td><input type="text" id="notes-{{ key }}" name="notes-{{ key }}" placeholder="Any notes?"></td>
+      </tr>
+
+      {% endfor %}
+   </table><br><br>
+   {% endif %}
+   {% endif %}
+   <input type = "submit" id="submit" value = "Submit" class="btn btn-success btn-lg center-block">
+   <br><br><br>
+   
+   <style>
+   table {
+   position: relative;
+    margin-top: 0px;
+    margin-bottom: 20px;
+    margin-right: 20px;
+    margin-left: 20px;
+
+    background-color: maroon;
+   }
+   td {
+      padding: 6px;
+      text-align: center;
+      white-space: nowrap;  
+   }
+   input {
+      color: black;
+   }
+
+</style>
+</form>
+{% endblock content %}
