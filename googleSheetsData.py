@@ -91,36 +91,31 @@ def getMenuDay(meal,dateStr):
 
 def sendToDatabase(formDict):
 	schoolDict = getSchoolData()
-	PRComponentsSpreadsheet = productionRecordSpreadsheet.worksheet("[Table] PRComponents")
 	PRMealsSpreadsheet = productionRecordSpreadsheet.worksheet("[Table] PRMeals")
-	allComponentValues = PRComponentsSpreadsheet.get_all_values()
 	allMealsValues = PRMealsSpreadsheet.get_all_values()
-	allComponentValuesLength = len(allComponentValues)
 	allMealsValuesLength = len(allMealsValues)
-	tableAcc = []
 
 	today = datetime.datetime.today().strftime('%D')
 	mealDateSplit = formDict['date'].split("-")
 	mealDate = mealDateSplit[1]+"/"+mealDateSplit[2]+"/"+mealDateSplit[0]
+
 	meal = formDict['meal'].lower()
 	menuDay = getMenuDay(meal,formDict['date'])
 	school = formDict['school']
+
 
 	if schoolDict[formDict['school']]['age'] == "912":
 		mealRow = [today,mealDate,'20172018',
 		school,meal,"0",formDict['reimbursable-meals'],
 		formDict['adult-meals'],formDict['adult-earned-meals'],"",formDict['daily-notes']]
-
 		PRMealsSpreadsheet.insert_row(mealRow, allMealsValuesLength+1)
 	else:
 		mealRow = [today,mealDate,'20172018',
 		school,meal,formDict['reimbursable-meals'],"0",
 		formDict['adult-meals'],formDict['adult-earned-meals'],"",formDict['daily-notes']]
-
 		PRMealsSpreadsheet.insert_row(mealRow, allMealsValuesLength+1)
 
-
-
+	prComponentsAcc = []
 	rowAcc = []
 	i = 1
 	for form in formDict:
@@ -131,15 +126,38 @@ def sendToDatabase(formDict):
 				rowAcc.extend([today,mealDate,school,meal,menuDay,form[8:],formDict[form]])	
 			elif ind == 3:
 				rowAcc.append(formDict[form])
-				tableAcc.append(rowAcc)
+				prComponentsAcc.append(rowAcc)
 				rowAcc = []
 			else:
 				rowAcc.append(formDict[form])			
 		i+=1
+
+	sendToDatabaseHelper(prComponentsAcc)
 	
 
-	for x in range(0,len(tableAcc)):
-		PRComponentsSpreadsheet.insert_row(tableAcc[x], allComponentValuesLength+x+1)
+def sendToDatabaseHelper(prComponentsRow):
+    PRComponentsSpreadsheet = productionRecordSpreadsheet.worksheet("[Table] PRComponents")    
+    allComponentValues = PRComponentsSpreadsheet.get_all_values()    
+    allComponentValuesLength = len(allComponentValues)
+    
+    cellRange = 'A'+str(allComponentValuesLength+1)+':M'+str(len(prComponentsRow)+allComponentValuesLength+1)
+    # Select a range
+    cell_list = PRComponentsSpreadsheet.range(cellRange)
+
+    for row in range(0,len(prComponentsRow)):
+        for col in range(0,len(prComponentsRow[row])):
+            ind = row * 13 + col
+            val = prComponentsRow[row][col]
+            cell = cell_list[ind]
+            cell.value = val
+
+    # Update in batch
+    PRComponentsSpreadsheet.update_cells(cell_list)
+
+
+
+
+
 	
 
 	
