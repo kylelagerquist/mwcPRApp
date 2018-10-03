@@ -2,7 +2,7 @@ import logging
 
 from flask import Flask, render_template, request, redirect, flash, url_for
 import datetime
-from googleSheetsData import getMenuCalData,getSchoolData,getMenuData,getBaselineOptInData,sendToDatabase,getLiveSchools
+from googleSheetsData import getMenuCalData,getSchoolData,getMenuData,getBaselineOptInData,sendToDatabase,getLiveSchools,getMenuDay
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import datetime
@@ -13,14 +13,7 @@ gc = gspread.authorize(credentials)
 
 
 
-def getMenuDay(meal,dateStr):
-    menuCalDict = getMenuCalData()
 
-    if dateStr in menuCalDict.keys():
-        if meal == 'Breakfast':
-            return menuCalDict[dateStr]["breakfast"]
-        else:
-            return menuCalDict[dateStr]["lunch"]
 
 
 
@@ -29,15 +22,15 @@ def getGrabAndGo(school,menu,meal):
     if meal == "Lunch":
         if school == "East Boston HS":
             return menuSheetDict["gg-ebhs-"+menu]['components']
-        if school == "Mckay K-8" or school == "Umana/Mario Academy K-8":
+        elif school == "Mckay K-8" or school == "Umana/Mario Academy K-8":
             return menuSheetDict["gg-mk&um-"+menu]['components']
+        else:
+            return []
     else:
         return []
 
-def plannedDictBuilder(menuDayComponents,school,meal):
-    schoolDict = getSchoolData()
+def plannedDictBuilder(menuDayComponents,school,meal,baselineOptInDict,schoolDict):
     returnDict = {}
-    baselineOptInDict = getBaselineOptInData()
 
     for component in menuDayComponents:
         try:
@@ -47,8 +40,9 @@ def plannedDictBuilder(menuDayComponents,school,meal):
             planned = attendance*mealOptIn*componentOptIn
             returnDict[component] = int(planned)
         except Exception as e:
-            returnDict[component] = "Unknown"
+            returnDict[component] = 0
     return returnDict
+
 
 def getFruitArray(formData):
     fruits = ["Fruit 1","Fruit 2","Fruit 3"]
@@ -84,53 +78,62 @@ def signup():
     menuSheetDict = getMenuData()
     schoolDict = getSchoolData()
     menuCalDict = getMenuCalData()
+    baselineOptInDict = getBaselineOptInData()
+    
 
     if request.method == 'POST':
-      result = request.form
-      meal = request.form['meal']
-      date = request.form['date']
-      fruits = getFruitArray(request.form)
+        result = request.form
+        meal = request.form['meal']
+        date = request.form['date']
+        menuDay = getMenuDay(meal,date)
 
-    try:
-        menuCalDict[date]
-    except Exception as e:
-        flash('Not a valid menu day')
-        return redirect(url_for('enter_pr_data'))
+        try:
+            menuCalDict[date]
+        except Exception as e:
+            flash('Not a valid menu day: '+date)
+            return redirect(url_for('enter_pr_data'))
 
-    school = request.form['school']
-    menuDay = getMenuDay(meal,date)
+        try:
+            menuSheetDict[menuDay]['components']
+        except Exception as e:
+            flash('Cannot find menu day componnets')
+            return redirect(url_for('enter_pr_data'))
 
-    try:
-        menuSheetDict[menuDay]['components']
-    except Exception as e:
-        flash('Cannot find menu day componnets')
-        return redirect(url_for('enter_pr_data'))
-
-    menuDayComponents = menuSheetDict[menuDay]['components']
-    saladComponents = menuSheetDict['al: salad bar']['components']
-    isLunch = meal == "Lunch"
-    isGrab = schoolDict[school]['grabAndGo'][0] == "TRUE"
-    isExpanded = schoolDict[school]['expandedSalad'][0] == "TRUE"
-    isHs = schoolDict[school]['age'][0] == "912"
-    expandedComponents = menuSheetDict['hsl: salad bar add-ons']['components']
-    grabAndGoBreakComponents = menuSheetDict['hsb: grab n go']['components']
-    grabAndGoLunchComponents = getGrabAndGo(school,menuDay,meal)
+        
+        school = request.form['school']
+        fruits = getFruitArray(result)
+        menuDayComponents = menuSheetDict[menuDay]['components']
+        saladComponents = menuSheetDict['al: salad bar']['components']
+        isLunch = meal == "Lunch"
+        isGrab = schoolDict[school]['grabAndGo'] == "TRUE"
+        isExpanded = schoolDict[school]['expandedSalad'] == "TRUE"
+        isHs = schoolDict[school]['age'] == "912"
+        expandedComponents = menuSheetDict['hsl: salad bar add-ons']['components']
+        grabAndGoBreakComponents = menuSheetDict['hsb: grab n go']['components']
+        grabAndGoLunchComponents = getGrabAndGo(school,menuDay,meal)
+        
 
 
-    return render_template("result.html",
-        result = result,
-        menuDay = menuDay,
-        drinks = plannedDictBuilder(menuSheetDict["am: drinks"]['components'],school,meal),
-        components = plannedDictBuilder(menuDayComponents,school,meal),
-        fruits = plannedDictBuilder(fruits,school,meal),
-        saladComponents = plannedDictBuilder(saladComponents,school,meal),
-        isLunch = isLunch,
-        isGrab = isGrab,
-        isExpanded = isExpanded,
-        isHs = isHs,
-        expandedComponents = plannedDictBuilder(expandedComponents,school,meal),
-        grabAndGoBreakComponents = plannedDictBuilder(grabAndGoBreakComponents,school,meal),
-        grabAndGoLunchComponents = plannedDictBuilder(grabAndGoLunchComponents,school,meal))
+        apiData = {
+        "result" : result,
+        "drinks" : plannedDictBuilder(menuSheetDict["am: drinks"]['components'],school,meal,baselineOptInDict,schoolDict),
+        "components" : plannedDictBuilder(menuDayComponents,school,meal,baselineOptInDict,schoolDict),
+        "menuDay" : menuDay,
+        "fruits" : plannedDictBuilder(fruits,school,meal,baselineOptInDict,schoolDict),
+        "saladComponents" : plannedDictBuilder(saladComponents,school,meal,baselineOptInDict,schoolDict),
+        "isLunch" : isLunch,
+        "isGrab" : isGrab,
+        "isExpanded" : isExpanded,
+        "isHs" : isHs,
+        "expandedComponents" : plannedDictBuilder(expandedComponents,school,meal,baselineOptInDict,schoolDict),
+        "grabAndGoBreakComponents" : plannedDictBuilder(grabAndGoBreakComponents,school,meal,baselineOptInDict,schoolDict),
+        "grabAndGoLunchComponents" : plannedDictBuilder(grabAndGoLunchComponents,school,meal,baselineOptInDict,schoolDict)
+        }
+
+
+    return render_template("result.html",apiData=apiData)
+
+  
 
 
 
@@ -150,6 +153,3 @@ if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the
     # application on Google App Engine. See entrypoint in app.yaml.
     app.run(host='127.0.0.1', port=8080, debug=True)
-
-
-
