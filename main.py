@@ -129,6 +129,9 @@ def signup():
         "grabAndGoBreakComponents" : plannedDictBuilder(grabAndGoBreakComponents,school,meal,baselineOptInDict,schoolDict),
         "grabAndGoLunchComponents" : plannedDictBuilder(grabAndGoLunchComponents,school,meal,baselineOptInDict,schoolDict)
         }
+    else:
+        return render_template('home.html',schools=getLiveSchools(),
+            fruits=menuSheetDict["am: fruit"]['components'],numFruits=["Fruit 1","Fruit 2","Fruit 3"],menuCalDict=menuCalDict)
 
 
     return render_template("result.html",apiData=apiData)
