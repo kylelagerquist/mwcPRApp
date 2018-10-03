@@ -9,8 +9,10 @@ gc = gspread.authorize(credentials)
 
 mainDatabaseKey = '1SHD8PpHVwbqErSb98IUfSCvPmtuBuoharKSvHHW3Snw'
 orderingToolKey = '1ZbMTvlplLRQZYawlHr2ptkaubn_iukXVQZD0uDRsFTo'
+productionRecord = '1H2F_SLN_8LXagXuzxVDrbBjngjCpWwrUxH3SmLhtoS4'
 mainDatabaseSpreadsheet = gc.open_by_key(mainDatabaseKey)
 orderingToolSpreadsheet = gc.open_by_key(orderingToolKey)
+productionRecordSpreadsheet = gc.open_by_key(productionRecord)
 
 def getMenuCalData():
     menuCalSheet = mainDatabaseSpreadsheet.worksheet("[Table] MenuCal")
@@ -63,8 +65,9 @@ def getBaselineOptInData():
     for x in range(1,len(baselineOptInData)):
         baselineOptInDict[baselineOptInData[x][0]] = {}
         for y in range(1,len(baselineOptInData[x])):
-            percentage = int(baselineOptInData[x][y].strip('%'))/100
-            baselineOptInDict[baselineOptInData[x][0]][baselineOptInData[0][y]] = percentage
+        	if len(baselineOptInData[x][y]) > 1:
+        		percentage = int(baselineOptInData[x][y].strip('%'))/100
+        		baselineOptInDict[baselineOptInData[x][0]][baselineOptInData[0][y]] = percentage
 
     return baselineOptInDict
 
@@ -76,22 +79,67 @@ def getLiveSchools():
 			returnArray.append(key)
 	return returnArray
 
+def getMenuDay(meal,dateStr):
+    menuCalDict = getMenuCalData()
+
+    if dateStr in menuCalDict.keys():
+        if meal == 'Breakfast':
+            return menuCalDict[dateStr]["breakfast"]
+        else:
+            return menuCalDict[dateStr]["lunch"]
+
 
 def sendToDatabase(formDict):
-	test = mainDatabaseSpreadsheet.worksheet("Sheet33")
-	#testLength = len(test.get_all_values)
+	schoolDict = getSchoolData()
+	PRComponentsSpreadsheet = productionRecordSpreadsheet.worksheet("[Table] PRComponents")
+	PRMealsSpreadsheet = productionRecordSpreadsheet.worksheet("[Table] PRMeals")
+	allComponentValues = PRComponentsSpreadsheet.get_all_values()
+	allMealsValues = PRMealsSpreadsheet.get_all_values()
+	allComponentValuesLength = len(allComponentValues)
+	allMealsValuesLength = len(allMealsValues)
+	tableAcc = []
+
+	today = datetime.datetime.today().strftime('%D')
+	mealDateSplit = formDict['date'].split("-")
+	mealDate = mealDateSplit[1]+"/"+mealDateSplit[2]+"/"+mealDateSplit[0]
+	meal = formDict['meal'].lower()
+	menuDay = getMenuDay(meal,formDict['date'])
+	school = formDict['school']
+
+	if schoolDict[formDict['school']]['age'] == "912":
+		mealRow = [today,mealDate,'20172018',
+		school,meal,"0",formDict['reimbursable-meals'],
+		formDict['adult-meals'],formDict['adult-earned-meals'],"",formDict['daily-notes']]
+
+		PRMealsSpreadsheet.insert_row(mealRow, allMealsValuesLength+1)
+	else:
+		mealRow = [today,mealDate,'20172018',
+		school,meal,formDict['reimbursable-meals'],"0",
+		formDict['adult-meals'],formDict['adult-earned-meals'],"",formDict['daily-notes']]
+
+		PRMealsSpreadsheet.insert_row(mealRow, allMealsValuesLength+1)
+
+
+
+	rowAcc = []
 	i = 1
 	for form in formDict:
-		test.update_cell(i, 1, form)
-		test.update_cell(i, 2, formDict[form])
-		i+=1
-	'''
-	row=[]
-	i=0
-	for key in formDict:
-		if i == 0 or i % 6 == 1
-		test.insert_row(row, index)
+		if i > 10:
+			ind = i % 7
 
-	#Update in batch
-	test.update_cells(cell_list)
-	'''
+			if ind == 4:
+				rowAcc.extend([today,mealDate,school,meal,menuDay,form[8:],formDict[form]])	
+			elif ind == 3:
+				rowAcc.append(formDict[form])
+				tableAcc.append(rowAcc)
+				rowAcc = []
+			else:
+				rowAcc.append(formDict[form])			
+		i+=1
+	
+
+	for x in range(0,len(tableAcc)):
+		PRComponentsSpreadsheet.insert_row(tableAcc[x], allComponentValuesLength+x+1)
+	
+
+	
