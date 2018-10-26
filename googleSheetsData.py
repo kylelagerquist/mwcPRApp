@@ -2,11 +2,12 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 
+# Authorize API credentials to use the Google Sheets API
 scope = ['https://spreadsheets.google.com/feeds']
 credentials = ServiceAccountCredentials.from_json_keyfile_name('./MWCapp-6ea127e5c10a.json', scope)
 gc = gspread.authorize(credentials)
 
-
+# Retrieve the three Google Sheets "database" files
 mainDatabaseKey = '1SHD8PpHVwbqErSb98IUfSCvPmtuBuoharKSvHHW3Snw'
 orderingToolKey = '1ZbMTvlplLRQZYawlHr2ptkaubn_iukXVQZD0uDRsFTo'
 productionRecord = '1H2F_SLN_8LXagXuzxVDrbBjngjCpWwrUxH3SmLhtoS4'
@@ -14,6 +15,8 @@ mainDatabaseSpreadsheet = gc.open_by_key(mainDatabaseKey)
 orderingToolSpreadsheet = gc.open_by_key(orderingToolKey)
 productionRecordSpreadsheet = gc.open_by_key(productionRecord)
 
+# Return a dictionary contating all of the data from the menuCal table
+# Iterate through the table retrieving the planned breakfast and lunch meal for each day
 def getMenuCalData():
     menuCalSheet = mainDatabaseSpreadsheet.worksheet("[Table] MenuCal")
     menuCalData = menuCalSheet.get_all_values()
@@ -23,7 +26,10 @@ def getMenuCalData():
         menuCalDict[menuCalData[x][0]] = {"breakfast": menuCalData[x][2], "lunch":menuCalData[x+1][2]}
 
     return menuCalDict
-        
+
+# Return a dictionary contating all of the data from the EaterInfo table
+# Iterate through the table retrieving the all of the neccessary information
+# for every school in the BPS school district
 def getSchoolData():
     schoolsSheet = mainDatabaseSpreadsheet.worksheet("[Table] EaterInfo")
     schoolsData = schoolsSheet.get_all_values()
@@ -44,7 +50,9 @@ def getSchoolData():
 
     return schoolDict
 
-
+# Return a dictionary contating all of the data from the Menu table
+# Iterate through the table retrieving the all of the neccessary information
+# for every school in the BPS school district
 def getMenuData():
     menuSheet = mainDatabaseSpreadsheet.worksheet("[Table] Menu")
     menuData = menuSheet.get_all_values()
