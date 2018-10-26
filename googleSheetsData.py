@@ -51,8 +51,8 @@ def getSchoolData():
     return schoolDict
 
 # Return a dictionary contating all of the data from the Menu table
-# Iterate through the table retrieving the all of the neccessary information
-# for every school in the BPS school district
+# Iterate through the table retrieving the all of the components from
+# each menu item that the BPS serves
 def getMenuData():
     menuSheet = mainDatabaseSpreadsheet.worksheet("[Table] Menu")
     menuData = menuSheet.get_all_values()
@@ -64,6 +64,8 @@ def getMenuData():
 
     return menuSheetDict
 
+# Return a dictionary contating all of the data from the menuCal table
+# Iterate through the table retrieving the planned breakfast and lunch meal for each day
 def getBaselineOptInData():
     baselineOptInSheet = orderingToolSpreadsheet.worksheet("Baseline Opt In rates")
     baselineOptInData = baselineOptInSheet.get_all_values()
@@ -79,6 +81,7 @@ def getBaselineOptInData():
 
     return baselineOptInDict
 
+# Return an array of all the current live schools that My Way Cafe is serving
 def getLiveSchools():
 	schoolDict = getSchoolData()
 	returnArray = []
@@ -87,6 +90,7 @@ def getLiveSchools():
 			returnArray.append(key)
 	return returnArray
 
+# return the menuday for the given meal and date string
 def getMenuDay(meal,dateStr):
     menuCalDict = getMenuCalData()
 
@@ -96,7 +100,11 @@ def getMenuDay(meal,dateStr):
         else:
             return menuCalDict[dateStr]["lunch"]
 
-
+# Take all data submitted from the application form, properly format it, then send it to the 
+# Production records database. There are two separates tables in the PR relational database structure, 
+# the individual entry needs to be sent to one table and all of the individual component information needs
+# to be sent to the other table. In order to improve run time, all rows are added to an array and then batch
+# uploaded to google sheets.
 def sendToDatabase(formDict):
 	schoolDict = getSchoolData()
 	PRMealsSpreadsheet = productionRecordSpreadsheet.worksheet("[Table] PRMeals")
@@ -142,7 +150,9 @@ def sendToDatabase(formDict):
 
 	sendToDatabaseHelper(prComponentsAcc)
 	
-
+# Helper function that uses an array of arrays, with each internal array representing one row in the
+# database. It finds the last row of the database and then for each cell in the row, the value is updated.
+# Makes one call via API to the google sheets database per row.
 def sendToDatabaseHelper(prComponentsRow):
     PRComponentsSpreadsheet = productionRecordSpreadsheet.worksheet("[Table] PRComponents")    
     allComponentValues = PRComponentsSpreadsheet.get_all_values()    
