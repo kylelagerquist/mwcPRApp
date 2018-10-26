@@ -7,16 +7,15 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 
+# Credentials for the google sheets API
 scope = ['https://spreadsheets.google.com/feeds']
 credentials = ServiceAccountCredentials.from_json_keyfile_name('./MWCapp-6ea127e5c10a.json', scope)
 gc = gspread.authorize(credentials)
 
 
 
-
-
-
-
+# if the school is a grab and go school, then this function will return all of the components
+# for the grab and go menu on the given day
 def getGrabAndGo(school,menu,meal):
     menuSheetDict = getMenuData()
     if meal == "Lunch":
@@ -29,6 +28,10 @@ def getGrabAndGo(school,menu,meal):
     else:
         return []
 
+
+# Returns a dictionary containing components as all of the keys and their calulated planned value
+# If the component does not exist in the databse, or an error occurs on an API call, then the planned
+# value will be set to 0. 
 def plannedDictBuilder(menuDayComponents,school,meal,baselineOptInDict,schoolDict):
     returnDict = {}
 
@@ -43,7 +46,7 @@ def plannedDictBuilder(menuDayComponents,school,meal,baselineOptInDict,schoolDic
             returnDict[component] = 0
     return returnDict
 
-
+# Returns an array of all selected fruits that the BPS cafateria served that day.
 def getFruitArray(formData):
     fruits = ["Fruit 1","Fruit 2","Fruit 3"]
     output = []
@@ -52,12 +55,11 @@ def getFruitArray(formData):
             output.append(formData[fruit])
     return output
 
-
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '1234567890123456'
+app.config['SECRET_KEY'] = '######'
 
 
-
+# the home directory of the application where a new PR submission can be submitted
 @app.route('/', methods = ['POST','GET'])
 def enter_pr_data():
     menuSheetDict = getMenuData()
@@ -71,7 +73,7 @@ def enter_pr_data():
         return render_template('home.html',schools=getLiveSchools(),
             fruits=menuSheetDict["am: fruit"]['components'],numFruits=["Fruit 1","Fruit 2","Fruit 3"],menuCalDict=menuCalDict)
 
-
+# The generated table composed of the information that the user submitted.
 @app.route('/generateTable', methods = ['POST'])
 def signup():
 
